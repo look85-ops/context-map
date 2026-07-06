@@ -1,6 +1,6 @@
 # Context Map
 
-**Геополитический дайджест для переезжающих и переехавших в Минск.**  
+**Геополитический дайджест для переезжающих и переехавших в Беларусь из РФ.**  
 **Geopolitical digest for those relocating to Minsk or already there.**
 
 ---

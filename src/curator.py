@@ -231,6 +231,16 @@ def post_process_md(md: str) -> str:
     md = re.sub(r'\(https?://([^\s)]+)\)', r'[\1](\1)', md)
     md = re.sub(r'\(([a-zA-Z0-9][^\s)]*\.[a-zA-Z]{2,}[^\s)]*)\)', r'[\1](https://\1)', md)
 
+    # Convert [Name][url] (reference-style) → [Name](url) with https:// if missing
+    def bracket_ref_link(m):
+        name = m.group(1)
+        url = m.group(2).strip().rstrip(",.!?;:")
+        if not url.startswith("http"):
+            url = "https://" + url
+        return f"[{name}]({url})"
+
+    md = re.sub(r'\[([^\]]+)\]\[([a-zA-Z0-9][^\]]*\.[^\]]+)\]', bracket_ref_link, md)
+
     # Convert [Name]url → [Name](url) with https:// if missing
     def bracket_link(m):
         name = m.group(1)
@@ -315,7 +325,7 @@ footer{{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);
 <div class="container">
 <header>
   <h1>Context Map</h1>
-  <div class="meta">{date_ru} · дайджест для переезжающих и переехавших в Минск</div>
+  <div class="meta">{date_ru} · дайджест для переезжающих и переехавших в Беларусь из РФ</div>
   <p class="desc">Дайджест собирает геополитический контекст, важный для переезда и адаптации: 7 разделов от обзорной карты до сценариев развития. Основа — новости за 3 дня, проанализированные ИИ. Не замена консультации.</p>
 </header>
 <main>
@@ -332,6 +342,40 @@ footer{{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);
 </body>
 </html>"""
     return html
+
+
+def validate_digest(md: str) -> list[str]:
+    """Post-generation quality gates."""
+    import re
+    issues = []
+
+    # All markdown links must have https://
+    for m in re.finditer(r'\[([^\]]+)\]\(([^)]+)\)', md):
+        url = m.group(2)
+        if not url.startswith("http") and not url.startswith("#") and not url.startswith("/"):
+            issues.append(f"Link '{m.group(1)}' missing protocol: {url}")
+
+    # No bare reference format [N] should remain
+    bare = re.findall(r'\[\d+\]', md)
+    if bare:
+        issues.append(f"{len(bare)} bare [N] refs remain")
+
+    # No bare URLs in parentheses
+    bare_paren = re.findall(r'\(https?://[^\s)]+\)', md)
+    if bare_paren:
+        issues.append(f"{len(bare_paren)} bare URLs in parens remain")
+
+    # Check code fence wrapping (should be stripped by post_process)
+    if md.strip().startswith("```"):
+        issues.append("Code fence still wrapping output")
+
+    if issues:
+        print("VALIDATION ISSUES:")
+        for i in issues:
+            print(f"  ! {i}")
+    else:
+        print("Validation: OK")
+    return issues
 
 
 def save(html: str):
@@ -365,6 +409,7 @@ def main():
     print(f"Digest raw: {len(md)} chars")
 
     md = post_process_md(md)
+    validate_digest(md)
 
     html = md_to_html(md)
     save(html)
