@@ -1,13 +1,13 @@
 # Context Map
 
-**Геополитический дайджест для решений о переезде в Минск.**  
-**Geopolitical digest for relocation decisions to Minsk.**
+**Геополитический дайджест для переезжающих и переехавших в Минск.**  
+**Geopolitical digest for those relocating to Minsk or already there.**
 
 ---
 
 ## RU
 
-**Context Map** — автоматический дайджест, который собирает геополитический контекст, важный для переезда из РФ в Беларусь. Генерируется раз в 3 дня на основе свежих новостей, отфильтрованных от пропагандистских источников.
+**Context Map** — автоматический дайджест, который собирает геополитический контекст, важный для переезда и жизни в Минске. Генерируется дважды в неделю (пн, ср) на основе свежих новостей, отфильтрованных от пропагандистских источников.
 
 ### Что внутри
 
@@ -19,12 +19,23 @@
 6. **Сценарии** — базовый / эскалация / деэскалация на 1-3 мес с триггерами
 7. **Дополнительно** — слепые пятна и неочевидные факторы
 
+### Как работает
+
+Новости собираются через DuckDuckGo → фильтрация от пропаганды → анализ ИИ → генерация HTML. Всё в GitHub Actions.
+
+### Стек
+
+- Python (curator.py)
+- DuckDuckGo Search (ddgs)
+- DeepSeek V3 (bothub.ru API)
+- GitHub Actions (cron пн, ср)
+- GitHub Pages (хостинг)
 
 ---
 
 ## EN
 
-**Context Map** is an auto-generated digest that monitors geopolitical developments relevant to relocating from Russia to Belarus. Updated every 3 days.
+**Context Map** is an auto-generated digest that monitors geopolitical developments relevant to relocating to or living in Minsk. Updated twice a week (Mon, Wed).
 
 ### Contents
 
@@ -38,11 +49,11 @@
 
 ### How it works
 
-News collected via DuckDuckGo → propaganda filtering → DeepSeek V3 analysis → HTML output. Runs on GitHub Actions.
+News collected via DuckDuckGo → propaganda filtering → AI analysis → HTML output. Runs on GitHub Actions.
 
 ### Stack
 
-Python, DuckDuckGo Search, DeepSeek V3, GitHub Actions, GitHub Pages.
+Python, DuckDuckGo Search, DeepSeek V3 (bothub.ru), GitHub Actions (Mon, Wed), GitHub Pages.
 
 ---
 
