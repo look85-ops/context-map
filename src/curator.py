@@ -231,6 +231,28 @@ def post_process_md(md: str) -> str:
     md = re.sub(r'\(https?://([^\s)]+)\)', r'[\1](\1)', md)
     md = re.sub(r'\(([a-zA-Z0-9][^\s)]*\.[a-zA-Z]{2,}[^\s)]*)\)', r'[\1](https://\1)', md)
 
+    # Convert [Name]url → [Name](url) with https:// if missing
+    def bracket_link(m):
+        name = m.group(1)
+        url = m.group(2).strip().rstrip(",.!?;:")
+        if not url.startswith("http"):
+            url = "https://" + url
+        return f"[{name}]({url})"
+
+    md = re.sub(r'\[([^\]]+)\](\s*https?://\S+)', bracket_link, md)
+    md = re.sub(r'\[([^\]]+)\](\s*[a-zA-Z0-9][^\s]*\.[a-zA-Z]{2,}\S*)', bracket_link, md)
+
+    # Convert bare https:// urls on own line → [domain](url)
+    def bare_url_link(m):
+        url = m.group(1).strip()
+        from urllib.parse import urlparse
+        domain = urlparse(url).netloc.replace("www.", "")
+        if not domain:
+            domain = url.split("/")[2] if "://" in url else url.split("/")[0]
+        return f"[{domain}]({url})"
+
+    md = re.sub(r'^\s*(https?://\S+)', bare_url_link, md, flags=re.MULTILINE)
+
     # Ensure all markdown link URLs have https://
     def ensure_https(m):
         text = m.group(1)
