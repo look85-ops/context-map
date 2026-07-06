@@ -31,7 +31,9 @@ jobs:
         run: |
           git config --global user.name "context-bot"
           git config --global user.email "bot@look85-ops.github.io"
+          git stash
           git pull --rebase origin main
+          git stash pop || true
           git add -A
           git diff --staged --quiet || git commit -m "digest: $(date +%Y-%m-%d)"
           git push
