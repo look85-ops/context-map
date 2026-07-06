@@ -201,6 +201,9 @@ def post_process_md(md: str) -> str:
         print(f"WARNING: {len(bare_refs)} bare [N] refs stripped")
         md = re.sub(r'\[\d+\]', '', md)
 
+    # Normalize number format: comma → thin space in numbers (Russian style)
+    md = re.sub(r'(?<=\d),(?=\d{3})', '\u2009', md)
+
     # Make sources block readable: [N]. url → [N]. [domain](url)
     def linkify_url(match):
         num = match.group(1)
@@ -221,6 +224,7 @@ def md_to_html(md: str) -> str:
     today = datetime.now()
     months = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"]
     date_ru = f"{today.day} {months[today.month-1]} {today.year}"
+    gen_ts = today.strftime("%d.%m.%Y %H:%M UTC")
     html = f"""<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -273,6 +277,7 @@ footer{{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);
 </div>
 <footer>
   <p>Context Map — автоматический дайджест для принятия решений.</p>
+  <p style="margin-top:0.25rem;font-size:0.75rem;color:var(--text2)">Сгенерирован {gen_ts}</p>
 </footer>
 </div>
 </body>
