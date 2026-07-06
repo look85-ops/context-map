@@ -13,14 +13,13 @@ import requests
 from ddgs import DDGS
 import markdown as md_lib
 
-API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
+API_KEY = os.environ.get("GH_TOKEN", "")
 if not API_KEY:
-    print("FATAL: OPENROUTER_API_KEY not set")
+    print("FATAL: GH_TOKEN not set")
     sys.exit(1)
 
-SITE_URL = "https://look85-ops.github.io/context-map"
-SITE_NAME = "Context Map"
-MODEL = "google/gemma-4-31b-it:free"
+BASE_URL = "https://models.inference.ai.azure.com"
+MODEL = "DeepSeek-V3-0324"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -118,12 +117,10 @@ def call_llm(context: str) -> str:
     system = SYSTEM_PROMPT.format(date=today)
 
     resp = requests.post(
-        "https://openrouter.ai/api/v1/chat/completions",
+        f"{BASE_URL}/chat/completions",
         headers={
             "Authorization": f"Bearer {API_KEY}",
             "Content-Type": "application/json",
-            "HTTP-Referer": SITE_URL,
-            "X-Title": SITE_NAME,
         },
         json={
             "model": MODEL,
