@@ -58,3 +58,15 @@ Python, DuckDuckGo Search, DeepSeek V3 (bothub.ru), GitHub Actions (Mon, Wed), G
 ---
 
 **Live:** https://look85-ops.github.io/context-map/
+
+### Fork & Adapt для другого региона
+
+Хочешь сделать такой дайджест под свой город/страну? Форкни репозиторий и поменяй:
+
+1. В `src/curator.py`: `SEARCH_QUERIES` (ключевые слова для поиска) и `SYSTEM_PROMPT` (описание твоей аудитории)
+2. В `.github/workflows/digest.yml`: `cron` (частоту генерации)
+3. Включи GitHub Pages в настройках репозитория (ветка `main`, папка `/`)
+
+Изменения в репозиторий вносятся **только через fork** — пул-реквесты не принимаю, это личный инструмент.
+
+**Repo:** https://github.com/look85-ops/context-map
