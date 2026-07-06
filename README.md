@@ -19,17 +19,6 @@
 6. **Сценарии** — базовый / эскалация / деэскалация на 1-3 мес с триггерами
 7. **Дополнительно** — слепые пятна и неочевидные факторы
 
-### Как работает
-
-Новости собираются через DuckDuckGo → фильтрация от пропаганды → анализ DeepSeek V3 → генерация HTML. Всё в GitHub Actions.
-
-### Стек
-
-- Python (curator.py)
-- DuckDuckGo Search (ddgs)
-- DeepSeek V3 (bothub.ru API)
-- GitHub Actions (cron каждые 3 дня)
-- GitHub Pages (хостинг)
 
 ---
 
@@ -53,7 +42,7 @@ News collected via DuckDuckGo → propaganda filtering → DeepSeek V3 analysis 
 
 ### Stack
 
-Python, DuckDuckGo Search, DeepSeek V3 (bothub.ru), GitHub Actions, GitHub Pages.
+Python, DuckDuckGo Search, DeepSeek V3, GitHub Actions, GitHub Pages.
 
 ---
 
