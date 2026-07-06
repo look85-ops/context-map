@@ -92,7 +92,7 @@ def search_news() -> list[dict]:
     with DDGS() as ddgs:
         for query in SEARCH_QUERIES:
             try:
-                for r in ddgs.text(query, max_results=4):
+                for r in ddgs.text(query, max_results=3):
                     url = r.get("href", "")
                     if url and url not in seen:
                         seen.add(url)
@@ -219,7 +219,7 @@ footer{{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);fo
 <div class="container">
 <header>
   <h1>Context Map</h1>
-  <div class="meta">{date_ru} · дайджест каждые 3 дня</div>
+  <div class="meta">{date_ru} · дайджест для решений о переезде в Минск</div>
 </header>
 <main>
 {body}
