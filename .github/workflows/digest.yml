@@ -24,6 +24,7 @@ jobs:
       - name: Generate digest
         run: python src/curator.py
         env:
+          DS_API_KEY: ${{ secrets.DS_API_KEY }}
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
 
       - name: Commit and push
