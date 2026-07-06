@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
 Context Map — geopolitical digest for relocation decisions.
-Searches news, summarizes via DeepSeek V3, generates HTML.
+Searches news, summarizes via DeepSeek V3 (bothub.ru), generates HTML.
 """
 
 import os
@@ -13,13 +13,13 @@ import requests
 from ddgs import DDGS
 import markdown as md_lib
 
-API_KEY = os.environ.get("GH_TOKEN", "")
+API_KEY = os.environ.get("DS_API_KEY", os.environ.get("GH_TOKEN", ""))
 if not API_KEY:
-    print("FATAL: GH_TOKEN not set")
+    print("FATAL: DS_API_KEY or GH_TOKEN not set")
     sys.exit(1)
 
-BASE_URL = "https://models.inference.ai.azure.com"
-MODEL = "DeepSeek-V3-0324"
+BASE_URL = "https://openai.bothub.ru/v1"
+MODEL = "deepseek-chat"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
