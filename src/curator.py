@@ -23,6 +23,15 @@ MODEL = "deepseek-chat"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+SOURCE_BLOCKLIST = [
+    "ria.ru", "tass.ru", "rt.com", "ukraina.ru", "life.ru",
+    "kremlin.ru", "sputnik", "news-front", "rusvesna",
+    "pravda.ru", "rublacklist", "mil.ru", "function.mil.ru",
+    "censor.net", "patrioty.org.ua", "ukrinform.ua",
+    "vz.ru", "iz.ru", "rg.ru", "1tv.ru", "russia.tv",
+    "vesti.ru", "gov.ru", "mid.ru",
+]
+
 SEARCH_QUERIES = [
     "Россия Украина война новости 2026",
     "экономика Россия санкции 2026",
@@ -86,6 +95,15 @@ SYSTEM_PROMPT = """Ты — аналитический ассистент Contex
 - Тон: спокойный, аналитический, ноль паники и хайпа"""
 
 
+def is_blocked(url: str) -> bool:
+    from urllib.parse import urlparse
+    domain = urlparse(url).netloc.lower()
+    for blocked in SOURCE_BLOCKLIST:
+        if blocked in domain:
+            return True
+    return False
+
+
 def search_news() -> list[dict]:
     seen = set()
     results = []
@@ -94,7 +112,7 @@ def search_news() -> list[dict]:
             try:
                 for r in ddgs.text(query, max_results=3):
                     url = r.get("href", "")
-                    if url and url not in seen:
+                    if url and url not in seen and not is_blocked(url):
                         seen.add(url)
                         results.append({
                             "title": r.get("title", ""),
@@ -103,7 +121,7 @@ def search_news() -> list[dict]:
                         })
             except Exception as e:
                 print(f"Search fail '{query}': {e}")
-    print(f"Collected {len(results)} unique items")
+    print(f"Collected {len(results)} unique items (blocklist filtered)")
     return results
 
 
@@ -202,6 +220,7 @@ body{{
 header{{margin-bottom:2.5rem;padding-bottom:1.5rem;border-bottom:1px solid var(--border)}}
 header h1{{font-size:1.75rem;font-weight:700;letter-spacing:-0.02em}}
 header .meta{{margin-top:0.5rem;font-size:0.875rem;color:var(--text2)}}
+header .desc{{margin-top:1rem;font-size:0.9rem;color:var(--text2);line-height:1.5}}
 h2{{font-size:1.35rem;margin-top:2.5rem;margin-bottom:0.75rem;font-weight:600}}
 h3{{font-size:1.1rem;margin-top:1.5rem;margin-bottom:0.5rem;font-weight:600;color:var(--accent)}}
 p{{margin-bottom:1rem}}
@@ -220,6 +239,7 @@ footer{{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);fo
 <header>
   <h1>Context Map</h1>
   <div class="meta">{date_ru} · дайджест для решений о переезде в Минск</div>
+  <p class="desc">Дайджест собирает геополитический контекст, важный для переезда: 7 разделов от обзорной карты до сценариев развития. Основа — новости за 3 дня, проанализированные DeepSeek V3. Не замена консультации.</p>
 </header>
 <main>
 {body}
