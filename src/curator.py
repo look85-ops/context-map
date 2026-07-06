@@ -250,7 +250,6 @@ def md_to_html(md: str) -> str:
   --border: #e5e7eb; --accent: #2563eb; --accent2: #1d4ed8;
   --w: 720px;
 }}
-}}
 *{{margin:0;padding:0;box-sizing:border-box}}
 body{{
   font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Noto Sans",sans-serif;
