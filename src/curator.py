@@ -85,10 +85,11 @@ SYSTEM_PROMPT = """Ты — аналитический ассистент Contex
 ---
 
 ФОРМАТ КАЖДОЙ ССЫЛКИ (ЭТО ОБЯЗАТЕЛЬНО):
+⚠️ КАЖДЫЙ абзац должен содержать минимум одну ссылку-источник в формате [Название](полный URL с https://).
 Каждый источник — ТОЛЬКО [Название](полный URL). 
 Правильно: «Курс рубля — 89/$ [RBC](https://www.rbc.ru/...)»
-Неправильно: «Курс рубля — 89/$ (RBC)» или «Курс рубля — 89/$ [1]»
-В конце дайджеста — блок "Источники:" со всеми URL в формате [N](url)
+Неправильно: «Курс рубля — 89/$ (RBC)» или «Курс рубля — 89/$ [1]» или «... (https://site.com)»
+В конце дайджеста — блок "Источники:" со всеми URL https:// в формате [N](url)
 
 ОБЩИЕ ПРАВИЛА:
 - Лаконично: макс 3 абзаца на раздел
@@ -217,14 +218,28 @@ def post_process_md(md: str) -> str:
     def linkify_url(match):
         num = match.group(1)
         url = match.group(2).strip()
+        if not url.startswith("http"):
+            url = "https://" + url
         from urllib.parse import urlparse
         domain = urlparse(url).netloc.replace("www.", "")
         return f"{num}. [{domain}]({url})"
 
-    md = re.sub(r'^(\d+)\.\s+(https?://[^\s]+)', linkify_url, md, flags=re.MULTILINE)
+    md = re.sub(r'^(\d+)\.\s+(https?://\S+)', linkify_url, md, flags=re.MULTILINE)
+    md = re.sub(r'^(\d+)\.\s+([a-zA-Z0-9][^\s]+\.[a-zA-Z]{2,}\S*)', linkify_url, md, flags=re.MULTILINE)
 
-    # Convert bare (url) → [url](url)
+    # Convert bare (url) → [url](url) with https:// if missing
     md = re.sub(r'\(https?://([^\s)]+)\)', r'[\1](\1)', md)
+    md = re.sub(r'\(([a-zA-Z0-9][^\s)]*\.[a-zA-Z]{2,}[^\s)]*)\)', r'[\1](https://\1)', md)
+
+    # Ensure all markdown link URLs have https://
+    def ensure_https(m):
+        text = m.group(1)
+        url = m.group(2)
+        if not url.startswith("http") and not url.startswith("#") and not url.startswith("/"):
+            url = "https://" + url
+        return f"[{text}]({url})"
+
+    md = re.sub(r'\[([^\]]+)\]\(([^)]+)\)', ensure_https, md)
 
     return md
 
