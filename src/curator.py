@@ -187,7 +187,8 @@ def post_process_md(md: str) -> str:
     # Simple check: count [N] not inside [text](url)
     link_wrapped = re.findall(r'\[([^\]]+)\]\(https?://', md)
     if bare_refs:
-        print(f"WARNING: {len(bare_refs)} bare [N] references found (not clickable)")
+        print(f"WARNING: {len(bare_refs)} bare [N] references found, stripping")
+        md = re.sub(r'\[\d+\]', '', md)
     return md
 
 
