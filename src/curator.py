@@ -192,6 +192,15 @@ def call_llm(context: str) -> str:
 def post_process_md(md: str) -> str:
     """Fix common LLM output issues."""
     import re
+
+    # Strip code fence if LLM wrapped entire output in triple backticks
+    md = md.strip()
+    if md.startswith("```"):
+        first = md.find("\n") + 1 if "\n" in md else 3
+        last = md.rfind("```")
+        md = md[first:last].strip()
+
+    # Fix section headings
     md = md.replace("Что я могла упустить", "Дополнительно")
     md = md.replace("Что я упустила", "Дополнительно")
     md = md.replace("Что можно упустить", "Дополнительно")
@@ -213,6 +222,10 @@ def post_process_md(md: str) -> str:
         return f"{num}. [{domain}]({url})"
 
     md = re.sub(r'^(\d+)\.\s+(https?://[^\s]+)', linkify_url, md, flags=re.MULTILINE)
+
+    # Convert bare (url) → [url](url)
+    md = re.sub(r'\(https?://([^\s)]+)\)', r'[\1](\1)', md)
+
     return md
 
 
