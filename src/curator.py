@@ -20,7 +20,7 @@ if not API_KEY:
 
 SITE_URL = "https://look85-ops.github.io/context-map"
 SITE_NAME = "Context Map"
-MODEL = "deepseek/deepseek-chat"
+MODEL = "google/gemma-4-31b-it:free"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
