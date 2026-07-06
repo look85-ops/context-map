@@ -19,7 +19,9 @@ if not API_KEY:
     sys.exit(1)
 
 BASE_URL = "https://openai.bothub.ru/v1"
+FALLBACK_URL = "https://models.inference.ai.azure.com"
 MODEL = "deepseek-chat"
+FALLBACK_MODEL = "Meta-Llama-3.3-70B-Instruct"
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -143,52 +145,71 @@ def build_context(results: list[dict]) -> str:
 def call_llm(context: str) -> str:
     today = datetime.now().strftime("%d.%m.%Y")
     system = SYSTEM_PROMPT.format(date=today)
+    gh_key = os.environ.get("GH_TOKEN", "")
 
-    resp = requests.post(
-        f"{BASE_URL}/chat/completions",
-        headers={
-            "Authorization": f"Bearer {API_KEY}",
-            "Content-Type": "application/json",
-        },
-        json={
-            "model": MODEL,
-            "messages": [
-                {"role": "system", "content": system},
-                {"role": "user", "content": context},
-            ],
-            "temperature": 0.7,
-            "max_tokens": 8192,
-        },
-        timeout=120,
-    )
+    endpoints = [
+        {"url": f"{BASE_URL}/chat/completions", "key": API_KEY, "model": MODEL},
+    ]
+    if gh_key:
+        endpoints.append({"url": f"{FALLBACK_URL}/chat/completions", "key": gh_key, "model": FALLBACK_MODEL})
 
-    if resp.status_code != 200:
-        raise Exception(f"API {resp.status_code}: {resp.text}")
+    last_error = None
+    for ep in endpoints:
+        try:
+            resp = requests.post(
+                ep["url"],
+                headers={
+                    "Authorization": f"Bearer {ep['key']}",
+                    "Content-Type": "application/json",
+                },
+                json={
+                    "model": ep["model"],
+                    "messages": [
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": context},
+                    ],
+                    "temperature": 0.7,
+                    "max_tokens": 16000,
+                },
+                timeout=180,
+            )
+            if resp.status_code == 200:
+                data = resp.json()
+                content = data["choices"][0]["message"]["content"]
+                usage = data.get("usage", {})
+                model_used = ep["model"]
+                print(f"LLM ({model_used}): {usage.get('prompt_tokens','?')} in / {usage.get('completion_tokens','?')} out")
+                return content
+            last_error = f"API {resp.status_code}"
+            print(f"  {ep['model']}: {last_error}, trying next...")
+        except Exception as e:
+            last_error = str(e)
+            print(f"  {ep['model']}: {last_error}, trying next...")
 
-    data = resp.json()
-    content = data["choices"][0]["message"]["content"]
-    usage = data.get("usage", {})
-    print(f"LLM: {usage.get('prompt_tokens','?')} in / {usage.get('completion_tokens','?')} out")
-    return content
+    raise Exception(f"All APIs failed: {last_error}")
 
 
 def post_process_md(md: str) -> str:
     """Fix common LLM output issues."""
+    import re
     md = md.replace("Что я могла упустить", "Дополнительно")
     md = md.replace("Что я упустила", "Дополнительно")
     md = md.replace("Что можно упустить", "Дополнительно")
 
-    # Warn if bare [N] references found (not followed by a URL)
-    import re
     bare_refs = re.findall(r'\[\d+\]', md)
-    # Remove references that are part of markdown links [text](url)
-    in_links = re.findall(r'\[([^\]]+)\]\([^)]+\)', md)
-    all_refs_in_links = [f'[{i}]' for i in range(1, 200)]
-    # Simple check: count [N] not inside [text](url)
-    link_wrapped = re.findall(r'\[([^\]]+)\]\(https?://', md)
     if bare_refs:
-        print(f"WARNING: {len(bare_refs)} bare [N] references found, stripping")
+        print(f"WARNING: {len(bare_refs)} bare [N] refs stripped")
         md = re.sub(r'\[\d+\]', '', md)
+
+    # Make sources block readable: [N]. url → [N]. [domain](url)
+    def linkify_url(match):
+        num = match.group(1)
+        url = match.group(2).strip()
+        from urllib.parse import urlparse
+        domain = urlparse(url).netloc.replace("www.", "")
+        return f"{num}. [{domain}]({url})"
+
+    md = re.sub(r'^(\d+)\.\s+(https?://[^\s]+)', linkify_url, md, flags=re.MULTILINE)
     return md
 
 
@@ -198,7 +219,8 @@ def md_to_html(md: str) -> str:
     body = body.replace('<a href="', '<a target="_blank" rel="noopener" href="')
 
     today = datetime.now()
-    date_ru = today.strftime("%d %B %Y")
+    months = ["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"]
+    date_ru = f"{today.day} {months[today.month-1]} {today.year}"
     html = f"""<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -232,7 +254,8 @@ li{{margin-bottom:0.25rem}}
 hr{{border:none;border-top:1px solid var(--border);margin:2rem 0}}
 blockquote{{border-left:3px solid var(--accent);padding-left:1rem;margin:1rem 0;color:var(--text2)}}
 code{{background:var(--border);padding:0.15rem 0.4rem;border-radius:4px;font-size:0.875em}}
-footer{{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);font-size:0.8rem;color:var(--text2)}}
+.disclaimer{{margin-top:2.5rem;padding:1rem 1.25rem;background:#fef3cd;border-left:4px solid #f59e0b;border-radius:4px;font-size:0.85rem;color:#92400e;line-height:1.5}}
+footer{{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);font-size:0.8rem;color:var(--text2)}}
 </style>
 </head>
 <body>
@@ -245,6 +268,9 @@ footer{{margin-top:3rem;padding-top:1.5rem;border-top:1px solid var(--border);fo
 <main>
 {body}
 </main>
+<div class="disclaimer">
+  <p>Сгенерировано AI. Ключевые цифры и факты рекомендуем перепроверять по первоисточникам. Не является инвестиционной или юридической консультацией.</p>
+</div>
 <footer>
   <p>Context Map — автоматический дайджест для принятия решений.</p>
 </footer>
