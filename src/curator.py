@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-Context Map — geopolitical digest for relocation decisions.
-Searches news, summarizes via DeepSeek V3 (bothub.ru), generates HTML.
+Context Map — digest for those relocating to Minsk or already there.
+Searches news, summarizes via AI, generates HTML.
 """
 
 import os
@@ -278,8 +278,8 @@ footer{{margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--border);
 <div class="container">
 <header>
   <h1>Context Map</h1>
-  <div class="meta">{date_ru} · дайджест для решений о переезде в Минск</div>
-  <p class="desc">Дайджест собирает геополитический контекст, важный для переезда: 7 разделов от обзорной карты до сценариев развития. Основа — новости за 3 дня, проанализированные DeepSeek V3. Не замена консультации.</p>
+  <div class="meta">{date_ru} · дайджест для переезжающих и переехавших в Минск</div>
+  <p class="desc">Дайджест собирает геополитический контекст, важный для переезда и адаптации: 7 разделов от обзорной карты до сценариев развития. Основа — новости за 3 дня, проанализированные ИИ. Не замена консультации.</p>
 </header>
 <main>
 {body}
