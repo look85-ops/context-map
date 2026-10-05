@@ -70,8 +70,8 @@ def parse_one(ad):
             return {
                 "url": url, "price": price,
                 "rooms": props.get("Количество комнат", "?"),
-                "area": props.get("Общая площадь", "?"),
-                "area_living": props.get("Жилая площадь", "?"),
+                "area": props.get("Общая площадь, м²", "?"),
+                "area_living": props.get("Жилая площадь, м²", "?"),
                 "floor": f"{floor}/{tf}",
                 "balcony": props.get("Балкон", "—"),
                 "material": props.get("Материал стен", "—"),
@@ -98,13 +98,15 @@ def haversine(lat1, lng1, lat2, lng2):
 
 def call_llm(context: str, api_key: str) -> str:
     print(f"[LLM] Calling {LLM_MODEL}...")
+    now = datetime.now()
+    system = SYSTEM_PROMPT.format(date=now.strftime("%d.%m.%Y %H:%M Минск"))
     resp = requests.post(
         LLM_URL,
         headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
         json={
             "model": LLM_MODEL,
             "messages": [
-                {"role": "system", "content": SYSTEM_PROMPT},
+                {"role": "system", "content": system},
                 {"role": "user", "content": context},
             ],
             "temperature": 0.4, "max_tokens": 6000,
