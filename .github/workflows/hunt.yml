@@ -1,8 +1,6 @@
 name: hunt
 
 on:
-  push:
-    branches: [main]
   schedule:
     - cron: "0 6,16 * * *"  # 9:00 и 19:00 Минск (UTC+3)
   workflow_dispatch:
@@ -35,4 +33,5 @@ jobs:
           git config --global user.email "bot@look85-ops.github.io"
           git add index.html artifacts/
           git diff --staged --quiet || git commit -m "hunt: $(date +%Y-%m-%d_%H:%M)"
+          git pull --rebase origin main || true
           git push
