@@ -1,12 +1,57 @@
 <!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8">
-<title>Minsk Apartments DEBUG 05.10.2026</title>
-<style>body{font-family:sans-serif;max-width:1100px;margin:1rem auto;padding:0 1rem}
-table{border-collapse:collapse;font-size:14px}th,td{border:1px solid #ccc;padding:4px 6px;text-align:left}
-th{background:#eee}a{color:#06c}</style></head><body>
-<h1>Minsk Apartments DEBUG</h1><p>05.10.2026 06:19 UTC · 3 вариантов · 60 собрано · 4 исключено</p>
-<table><thead><tr><th>#</th><th>Адрес</th><th>Цена</th><th>Комн</th><th>м²</th><th>Этаж</th><th>Балкон</th><th>Материал</th><th>Год</th><th>Метро</th><th>Район</th><th>Ссылка</th></tr></thead>
-<tbody><tr><td>1</td><td>Якубовского ул, 54</td><td>362,500</td><td>3</td><td>63.5</td><td>2/9</td><td>Лоджия</td><td>Панельный</td><td>1986</td><td>м.Октябрьская ~7.3км</td><td>Фрунзенский</td><td><a href="https://re.kufar.by/vi/1083713897" target="_blank">Куфар</a></td></tr>
-<tr><td>2</td><td>Прушинских ул, 28</td><td>430,000</td><td>3</td><td>80.4</td><td>6/9</td><td>Лоджия</td><td>Панельный</td><td>2003</td><td>м.Октябрьская ~7.6км</td><td>Ленинский</td><td><a href="https://re.kufar.by/vi/1086177124" target="_blank">Куфар</a></td></tr>
-<tr><td>3</td><td>Сухаревская ул, 58</td><td>393,956</td><td>3</td><td>69.5</td><td>2/9</td><td>Есть</td><td>?</td><td>2005</td><td>м.Октябрьская ~8.8км</td><td>Фрунзенский</td><td><a href="https://re.kufar.by/vi/1087703087" target="_blank">Куфар</a></td></tr></tbody></table>
-<p>DEBUG MODE — без LLM, без фильтра по 4-5/5, только Kufar. 2026-10-05 06:19</p>
-</body></html>
+<title>Minsk Apartments — 05.10.2026</title>
+<style>
+:root{--bg:#faf9f7;--text:#1a1a1a;--text2:#6b7280;--border:#e5e7eb;--accent:#2563eb;--green:#059669;--gold:#d97706}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;font-size:15px;padding:1.5rem 1rem}
+.container{max-width:1000px;margin:0 auto}
+header{margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:2px solid var(--accent)}
+header h1{font-size:1.5rem;font-weight:700}
+header .meta{margin-top:.3rem;font-size:.82rem;color:var(--text2)}
+header .criteria{margin-top:.5rem;font-size:.78rem;color:var(--text2);line-height:1.5}
+.summary{margin:.3rem 0 .8rem;font-size:.9rem;color:var(--text2)}
+table{width:100%;border-collapse:collapse;margin:.5rem 0 1.5rem;font-size:.82rem}
+th{background:#f3f4f6;text-align:left;padding:.5rem .4rem;font-weight:600;border-bottom:2px solid var(--border);white-space:nowrap}
+td{padding:.45rem .4rem;border-bottom:1px solid var(--border)}
+tr.top3{background:#ecfdf5}tr.top3 td:first-child{border-left:3px solid var(--green)}
+tr.ok{background:#fffbeb}tr.ok td:first-child{border-left:3px solid var(--gold)}
+tr.low{opacity:.65}
+.price{white-space:nowrap;text-align:right}
+a{color:var(--accent);text-decoration:underline;text-underline-offset:2px}a:hover{color:#1d4ed8}
+.verdict{margin-top:1.5rem;padding:1rem 1.25rem;background:#f0f9ff;border-left:4px solid var(--accent);border-radius:4px}
+.verdict h3{font-size:1rem;margin-bottom:.5rem}.verdict p{margin-bottom:.4rem;font-size:.88rem}
+.stats{margin-top:.8rem;padding:.6rem .8rem;background:#f9fafb;border-radius:4px;font-size:.78rem;color:var(--text2)}
+footer{margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);font-size:.75rem;color:var(--text2)}
+.disclaimer{margin-top:.8rem;padding:.6rem .8rem;background:#fef2f2;border-left:3px solid #ef4444;border-radius:4px;font-size:.78rem;color:#991b1b}
+</style></head><body><div class="container">
+<header><h1>Minsk Apartments</h1>
+<div class="meta">5 октября 2026 · Kufar API + DeepSeek · 2×/день</div>
+<div class="criteria">3-4 комнаты · до 520 000 BYN · не 1-й эт · не 4-5/5 · балкон/лоджия · м.Восток — м.Октябрьская</div></header>
+<main><p class="summary">Найдено 28 вариантов. 2024-03-15</p>
+
+<table>
+<thead><tr><th>#</th><th>Адрес</th><th>Цена</th><th>Комн</th><th>м²</th><th>м² жил</th><th>Этаж</th><th>Балкон</th><th>Материал</th><th>Год</th><th>Метро</th><th>Оценка</th><th>Ссылка</th></tr></thead>
+<tbody>
+<tr class="top3"><td>1</td><td>Янковского ул, 6</td><td class="price">462,060 BYN</td><td>3</td><td>?</td><td>?</td><td>7/10</td><td>Лоджия</td><td>Панельный</td><td>2003</td><td>м.Октябрьская 8.3км</td><td><strong>7.5/10</strong></td><td><a href="https://re.kufar.by/vi/1086147873" target="_blank">открыть</a></td></tr>
+<tr class="top3"><td>2</td><td>Сергея Есенина ул, 35к2</td><td class="price">484,175 BYN</td><td>3</td><td>?</td><td>?</td><td>5/12</td><td>Есть</td><td>Панельный</td><td>1995</td><td>м.Октябрьская 9.0км</td><td><strong>7.2/10</strong></td><td><a href="https://re.kufar.by/vi/1087807457" target="_blank">открыть</a></td></tr>
+<tr class="top3"><td>3</td><td>Одинцова ул, 103</td><td class="price">470,500 BYN</td><td>3</td><td>?</td><td>?</td><td>6/12</td><td>Лоджия</td><td>Панельный</td><td>1999</td><td>м.Октябрьская 8.5км</td><td><strong>7.0/10</strong></td><td><a href="https://re.kufar.by/vi/1087827645" target="_blank">открыть</a></td></tr>
+<tr class="ok"><td>4</td><td>Прушинских ул, 28</td><td class="price">430,000 BYN</td><td>3</td><td>?</td><td>?</td><td>6/9</td><td>Лоджия</td><td>Панельный</td><td>2003</td><td>м.Октябрьская 7.6км</td><td>6.5/10</td><td><a href="https://re.kufar.by/vi/1086177124" target="_blank">открыть</a></td></tr>
+<tr class="ok"><td>5</td><td>Мира пр, 8</td><td class="price">439,776 BYN</td><td>3</td><td>?</td><td>?</td><td>6/12</td><td>Лоджия</td><td>Каркасно-блочный</td><td>2026</td><td>м.Октябрьская 3.8км</td><td>6.3/10</td><td><a href="https://re.kufar.by/vi/1087781712" target="_blank">открыть</a></td></tr>
+<tr class="ok"><td>6</td><td>Мира пр, 2</td><td class="price">430,044 BYN</td><td>3</td><td>?</td><td>?</td><td>9/25</td><td>Лоджия</td><td>Каркасно-блочный</td><td>2020</td><td>м.Октябрьская 3.4км</td><td>6.2/10</td><td><a href="https://re.kufar.by/vi/1085971058" target="_blank">открыть</a></td></tr>
+<tr class="ok"><td>7</td><td>Физкультурная ул, 18</td><td class="price">436,059 BYN</td><td>3</td><td>?</td><td>?</td><td>5/12</td><td>Лоджия</td><td>Панельный</td><td>1999</td><td>м.Октябрьская 3.7км</td><td>6.1/10</td><td><a href="https://re.kufar.by/vi/1080857390" target="_blank">открыть</a></td></tr>
+<tr class="ok"><td>8</td><td>Михаила Савицкого ул, 23</td><td class="price">396,964 BYN</td><td>3</td><td>?</td><td>?</td><td>2/13</td><td>Лоджия</td><td>Каркасно-блочный</td><td>2026</td><td>м.Октябрьская 4.2км</td><td>6.0/10</td><td><a href="https://re.kufar.by/vi/1072347662" target="_blank">открыть</a></td></tr>
+<tr class="ok"><td>9</td><td>Аэродромная ул, 26А</td><td class="price">413,804 BYN</td><td>3</td><td>?</td><td>?</td><td>4/25</td><td>Лоджия</td><td>Каркасно-блочный</td><td>2022</td><td>м.Октябрьская 3.4км</td><td>5.8/10</td><td><a href="https://re.kufar.by/vi/1066673950" target="_blank">открыть</a></td></tr>
+<tr class="ok"><td>10</td><td>Притыцкого ул, 25</td><td class="price">418,015 BYN</td><td>3</td><td>?</td><td>?</td><td>2/19</td><td>Лоджия</td><td>Монолитный</td><td>2026</td><td>м.Октябрьская 4.6км</td><td>5.7/10</td><td><a href="https://re.kufar.by/vi/1087763045" target="_blank">открыть</a></td></tr>
+<tr class="ok"><td>11</td><td>Якубовского ул, 54</td><td class="price">362,500 BYN</td><td>3</td><td>?</td><td>?</td><td>2/9</td><td>Лоджия</td><td>Панельный</td><td>1986</td><td>м.Октябрьская 7.3км</td><td>5.6/10</td><td><a href="https://re.kufar.by/vi/1083713897" target="_blank">открыть</a></td></tr>
+<tr class="ok"><td>12</td><td>Сухаревская ул, 58</td><td class="price">393,956 BYN</td><td>3</td><td>?</td><td>?</td><td>2/9</td><td>Есть</td><td>—</td><td>2005</td><td>м.Октябрьская 8.8км</td><td>5.5/10</td><td><a href="https://re.kufar.by/vi/1087703087" target="_blank">открыть</a></td></tr>
+<tr class="low"><td>13</td><td>Казинца ул, 107</td><td class="price">325,300 BYN</td><td>3</td><td>?</td><td>?</td><td>2/4</td><td>Есть</td><td>Кирпичный</td><td>1961</td><td>м.Октябрьская 6.9км</td><td>4.8/10</td><td><a href="https://re.kufar.by/vi/1077876952" target="_blank">открыть</a></td></tr>
+<tr class="low"><td>14</td><td>Притыцкого ул, 38</td><td class="price">360,876 BYN</td><td>3</td><td>?</td><td>?</td><td>2/9</td><td>Лоджия</td><td>Панельный</td><td>1973</td><td>м.Октябрьская 4.6км</td><td>4.5/10</td><td><a href="https://re.kufar.by/vi/1085948370" target="_blank">открыть</a></td></tr>
+<tr class="low"><td>15</td><td>Воронянского ул, 52</td><td class="price">365,000 BYN</td><td>3</td><td>?</td><td>?</td><td>3/9</td><td>Лоджия</td><td>Панельный</td><td>1973</td><td>м.Октябрьская 2.8км</td><td>4.3/10</td><td><a href="https://re.kufar.by/vi/1078295262" target="_blank">открыть</a></td></tr>
+</tbody>
+</table>
+
+<div class="verdict"><h3>Рекомендации</h3><p>1. Янковского ул, 6 - хороший вариант с евроремонтом, панельный дом 2003 года постройки. Минус - далеко от метро.<br>2. Сергея Есенина ул, 35к2 - просторная квартира с евроремонтом, но также далеко от метро и панельный дом.<br>3. Одинцова ул, 103 - хорошее соотношение цены и качества, панельный дом 1999 года, но дальняя локация.</p></div>
+<div class="stats"><p>Собрано: 28. После фильтрации: 15. Исключено: 13.</p></div></main>
+<div class="disclaimer">Авто-сбор из Kufar API. Проверяйте на сайте перед звонком.</div>
+<footer><p>Apartment Hunter v2.0 · 05.10.2026 06:22 Минск</p></footer>
+</div></body></html>
