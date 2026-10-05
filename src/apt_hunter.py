@@ -23,6 +23,7 @@ TARGET_METRO = [
 ]
 
 MAX_PRICE = 520000
+MAX_DISTANCE_KM = 3.0  # max distance to nearest target metro
 LLM_MODEL = "deepseek-chat"
 LLM_URL = "https://openai.bothub.ru/v1/chat/completions"
 
@@ -162,6 +163,9 @@ def main():
         # Score
         metro = min(TARGET_METRO, key=lambda m: haversine(r["lat"], r["lng"], m["lat"], m["lng"]))
         dist = round(haversine(r["lat"], r["lng"], metro["lat"], metro["lng"]), 1)
+        if dist > MAX_DISTANCE_KM:
+            skipped += 1
+            continue
         r["metro_name"] = metro["name"]
         r["metro_dist"] = dist
         results.append(r)
@@ -242,7 +246,7 @@ footer{{margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);fo
 </style></head><body><div class="container">
 <header><h1>Minsk Apartments</h1>
 <div class="meta">{now.day} {["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"][now.month-1]} {now.year} · Kufar API + DeepSeek · 2×/день</div>
-<div class="criteria">3-4 комнаты · до 520 000 BYN · не 1-й эт · не 4-5/5 · балкон/лоджия · м.Восток — м.Октябрьская</div></header>
+<div class="criteria">3-4 комнаты · до 520 000 BYN · не 1-й эт · не 4-5/5 · балкон/лоджия · до {MAX_DISTANCE_KM}км от метро · м.Восток — м.Октябрьская</div></header>
 <main>{body}</main>
 <div class="disclaimer">Авто-сбор из Kufar API. Проверяйте на сайте перед звонком.</div>
 <footer><p>Apartment Hunter v{VERSION} · {now:%d.%m.%Y %H:%M} Минск</p></footer>
