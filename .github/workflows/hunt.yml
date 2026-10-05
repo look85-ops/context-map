@@ -1,6 +1,8 @@
 name: hunt
 
 on:
+  push:
+    branches: [main]
   schedule:
     - cron: "0 6,16 * * *"  # 9:00 и 19:00 Минск (UTC+3)
   workflow_dispatch:
