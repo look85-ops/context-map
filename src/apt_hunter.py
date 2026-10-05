@@ -22,21 +22,35 @@ TARGET_METRO = [
     {"name": "Якуба Коласа", "lat": 53.9150, "lng": 27.5810},
 ]
 
+# Kufar metro station IDs from your search URL
+# 3=Восток, 5=?, 7=Акад.наук?, 14=Октябрьская?, 16=Я.Коласа?, 17=?, 23=?
+KUFAF_METRO_IDS = "v.or:7,16,23,3,17,14,5"
+
+EXCLUDE_MICRO = ["минск-мир", "минск мир"]
+EXCLUDE_ADDR = ["белинского", "беломорская"]  # scam / already seen
+
 MAX_PRICE = 520000
-MAX_DISTANCE_KM = 4.0  # max distance to nearest target metro
 LLM_MODEL = "deepseek-chat"
 LLM_URL = "https://openai.bothub.ru/v1/chat/completions"
 
 
 def search_api():
-    params = {"cat": 1010, "cur": "USD", "gtsy": "country-belarus~province-minsk~locality-minsk",
-              "rms": "v.or:3,4", "size": 200, "sort": "lst.d", "typ": "sell"}
+    """Kufar API with metro + price + floor filters."""
+    params = {
+        "cat": 1010, "cur": "USD",
+        "gtsy": "country-belarus~province-minsk~locality-minsk",
+        "rms": "v.or:3,4",
+        "mee": KUFAF_METRO_IDS,
+        "nff": 1,
+        "prc": "r:0,160000",
+        "size": 100, "sort": "lst.d", "typ": "sell",
+    }
     resp = requests.get("https://api.kufar.by/search-api/v2/search/map/over",
                        params=params, headers=HEADERS, timeout=30)
     data = resp.json()
     minsk = [a for a in data["ads"] if a.get("r") and a.get("p", 0) > 0]
-    print(f"[Kufar] {data['total']} total, {len(minsk)} Minsk")
-    return minsk[:100]
+    print(f"[Kufar] {data['total']} total, {len(minsk)} in zone")
+    return minsk
 
 
 def parse_one(ad):
@@ -67,6 +81,10 @@ def parse_one(ad):
                 return {"skip": f"{f}/5fl"}
             if props.get("Балкон", "") == "Нет":
                 return {"skip": "no balcony"}
+            # Exclude known scam/seen addresses
+            addr_lower = item.get("address", {}).get("streetAddress", "").lower()
+            if any(ex in addr_lower for ex in EXCLUDE_ADDR):
+                return {"skip": "excluded addr"}
             return {
                 "url": url, "price": price,
                 "rooms": props.get("Количество комнат", "?"),
@@ -163,12 +181,19 @@ def main():
         if "skip" in r:
             skipped += 1
             continue
-        # Score
-        metro = min(TARGET_METRO, key=lambda m: haversine(r["lat"], r["lng"], m["lat"], m["lng"]))
-        dist = round(haversine(r["lat"], r["lng"], metro["lat"], metro["lng"]), 1)
-        if dist > MAX_DISTANCE_KM:
+        # Exclude Minsk-Mir
+        micro = r.get("microdistrict", "").lower()
+        if any(ex in micro for ex in EXCLUDE_MICRO):
             skipped += 1
             continue
+        # Compute nearest metro for display
+        lat, lng = r["lat"], r["lng"]
+        if lat and lng:
+            metro = min(TARGET_METRO, key=lambda m: haversine(lat, lng, m["lat"], m["lng"]))
+            dist = round(haversine(lat, lng, metro["lat"], metro["lng"]), 1)
+        else:
+            metro = {"name": "?"}
+            dist = 99
         r["metro_name"] = metro["name"]
         r["metro_dist"] = dist
         results.append(r)
@@ -249,7 +274,7 @@ footer{{margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);fo
 </style></head><body><div class="container">
 <header><h1>Minsk Apartments</h1>
 <div class="meta">{now.day} {["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"][now.month-1]} {now.year} · Kufar API + DeepSeek · 2×/день</div>
-<div class="criteria">3-4 комнаты · до 520 000 BYN · не 1-й эт · не 4-5/5 · балкон/лоджия · до {MAX_DISTANCE_KM}км от метро · м.Восток — м.Октябрьская</div></header>
+<div class="criteria">3-4 комнаты · до 520 000 BYN · не 1-й эт · не 4-5/5 · балкон/лоджия · м.Восток — м.Октябрьская (метро)</div></header>
 <main>{body}</main>
 <div class="disclaimer">Авто-сбор из Kufar API. Проверяйте на сайте перед звонком.</div>
 <footer><p>Apartment Hunter v{VERSION} · {now:%d.%m.%Y %H:%M} Минск</p></footer>
