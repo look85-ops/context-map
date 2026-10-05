@@ -23,7 +23,7 @@ TARGET_METRO = [
 ]
 
 MAX_PRICE = 520000
-MAX_DISTANCE_KM = 3.0  # max distance to nearest target metro
+MAX_DISTANCE_KM = 4.0  # max distance to nearest target metro
 LLM_MODEL = "deepseek-chat"
 LLM_URL = "https://openai.bothub.ru/v1/chat/completions"
 
@@ -36,7 +36,7 @@ def search_api():
     data = resp.json()
     minsk = [a for a in data["ads"] if a.get("r") and a.get("p", 0) > 0]
     print(f"[Kufar] {data['total']} total, {len(minsk)} Minsk")
-    return minsk[:60]
+    return minsk[:100]
 
 
 def parse_one(ad):
