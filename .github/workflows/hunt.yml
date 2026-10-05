@@ -33,9 +33,7 @@ jobs:
         run: |
           git config --global user.name "apt-bot"
           git config --global user.email "bot@look85-ops.github.io"
-          git stash || true
           git pull --rebase origin main
-          git stash pop || true
-          git add -A
+          git add index.html artifacts/
           git diff --staged --quiet || git commit -m "hunt: $(date +%Y-%m-%d_%H:%M)"
           git push
