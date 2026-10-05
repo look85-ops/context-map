@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Apartment Hunter v2 — Kufar API + JSON-LD + LLM. No DDG for now."""
 
-import os, sys, re, json, time
+import os, re, json, time
 from datetime import datetime
 from pathlib import Path
 import requests
@@ -30,8 +30,8 @@ EXCLUDE_MICRO = ["минск-мир", "минск мир"]
 EXCLUDE_ADDR = ["белинского", "беломорская"]  # scam / already seen
 
 MAX_PRICE = 520000
-LLM_MODEL = "deepseek-chat"
-LLM_URL = "https://openai.bothub.ru/v1/chat/completions"
+# Don't need LLM/DS_API_KEY for raw table mode
+LLM_MODEL = "deepseek-chat"  # kept for future use
 
 
 def search_api():
@@ -164,12 +164,6 @@ def main():
     now = datetime.now()
     print(f"Apartment Hunter v{VERSION} — {now}")
 
-    api_key = os.environ.get("DS_API_KEY") or os.environ.get("GH_TOKEN") or ""
-    if not api_key:
-        print("FATAL: no API key")
-        return
-
-    # Phase 1-2: Kufar
     ads = search_api()
     results, skipped = [], 0
     for i, ad in enumerate(ads):
@@ -181,12 +175,10 @@ def main():
         if "skip" in r:
             skipped += 1
             continue
-        # Exclude Minsk-Mir
         micro = r.get("microdistrict", "").lower()
         if any(ex in micro for ex in EXCLUDE_MICRO):
             skipped += 1
             continue
-        # Compute nearest metro for display
         lat, lng = r["lat"], r["lng"]
         if lat and lng:
             metro = min(TARGET_METRO, key=lambda m: haversine(lat, lng, m["lat"], m["lng"]))
@@ -199,51 +191,28 @@ def main():
         results.append(r)
     print(f"  {len(results)} passed, {skipped} skipped")
 
-    if not results:
-        print("Nothing found")
-        return
-
-    # Build context
-    lines = ["## ОБЪЯВЛЕНИЯ KUFAR (проверены, детали из JSON-LD)\n"]
+    # Always generate HTML
+    rows = []
     for i, item in enumerate(results, 1):
-        lines.append(
-            f"[{i}] {item['address']} | {item['price']:,.0f} BYN | "
-            f"{item['rooms']}к | {item['area']}м²({item['area_living']}жил) | "
-            f"{item['floor']}эт | балкон:{item['balcony']} | {item['material']} | "
-            f"{item['year']}г | {item['district']} | м.{item['metro_name']} ~{item['metro_dist']}км | "
-            f"ремонт:{item['renovation']}"
+        rows.append(
+            f'<tr><td>{i}</td><td>{item["address"]}</td>'
+            f'<td class="price">{item["price"]:,.0f}</td>'
+            f'<td>{item["rooms"]}</td><td>{item["area"]}</td><td>{item["area_living"]}</td>'
+            f'<td>{item["floor"]}</td><td>{item["balcony"]}</td><td>{item["material"]}</td>'
+            f'<td>{item["year"]}</td><td>м.{item["metro_name"]} {item["metro_dist"]}км</td>'
+            f'<td>{item["district"]}</td>'
+            f'<td><a href="{item["url"]}" target="_blank">Куфар</a></td></tr>'
         )
-        lines.append(f"   URL: {item['url']}")
 
-    # Phase 3: LLM
-    print(f"[LLM] {len(results)} listings, context {sum(len(l) for l in lines)} chars")
-    context = "\n".join(lines)
-    try:
-        raw = call_llm(context, api_key)
-    except Exception as e:
-        print(f"LLM FAIL: {e}")
-        # Fallback: plain HTML table
-        rows = []
-        for i, item in enumerate(results, 1):
-            rows.append(
-                f'<tr><td>{i}</td><td>{item["address"]}</td><td class="price">{item["price"]:,.0f}</td>'
-                f'<td>{item["rooms"]}</td><td>{item["area"]}</td><td>{item["area_living"]}</td>'
-                f'<td>{item["floor"]}</td><td>{item["balcony"]}</td><td>{item["material"]}</td>'
-                f'<td>{item["year"]}</td><td>м.{item["metro_name"]} {item["metro_dist"]}км</td>'
-                f'<td>—</td><td><a href="{item["url"]}" target="_blank">открыть</a></td></tr>'
-            )
-        body = (
-            f'<p class="summary">Найдено {len(results)} (LLM недоступен — сырая таблица)</p>'
-            f'<table><thead><tr><th>#</th><th>Адрес</th><th>Цена</th><th>Комн</th><th>м²</th><th>жил</th>'
-            f'<th>Этаж</th><th>Балкон</th><th>Материал</th><th>Год</th><th>Метро</th><th>Оценка</th><th>Ссылка</th>'
-            f'</tr></thead><tbody>{"".join(rows)}</tbody></table>'
-        )
-    else:
-        body = raw.strip()
-        if body.startswith("```"):
-            nl = body.find("\n") + 1
-            le = body.rfind("```")
-            body = body[nl:le].strip() if le > nl else body
+    body = (
+        f'<p class="summary">Найдено {len(results)} вариантов · {len(ads)} собрано · {skipped} исключено</p>'
+        f'<table><thead><tr>'
+        f'<th>#</th><th>Адрес</th><th>Цена,BYN</th><th>к</th><th>м²</th><th>жил</th>'
+        f'<th>Этаж</th><th>Балкон</th><th>Материал</th><th>Год</th>'
+        f'<th>Метро</th><th>Район</th><th>Ссылка</th>'
+        f'</tr></thead><tbody>{"".join(rows) if rows else "<tr><td colspan=13>Ничего не найдено — проверьте позже</td></tr>"}'
+        f'</tbody></table>'
+    )
 
     # Build page
     html = f"""<!DOCTYPE html><html lang="ru"><head><meta charset="UTF-8">
