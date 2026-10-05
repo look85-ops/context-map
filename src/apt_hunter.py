@@ -19,9 +19,10 @@ import markdown as md_lib
 
 VERSION = "2.0"
 
-API_KEY = os.environ.get("DS_API_KEY", os.environ.get("GH_TOKEN", ""))
+API_KEY = os.environ.get("DS_API_KEY") or os.environ.get("GH_TOKEN") or ""
+print(f"[Init] DS_API_KEY={'***' if os.environ.get('DS_API_KEY') else 'MISSING'}, GH_TOKEN={'***' if os.environ.get('GH_TOKEN') else 'MISSING'}")
 if not API_KEY:
-    print("FATAL: DS_API_KEY or GH_TOKEN not set")
+    print("FATAL: DS_API_KEY or GH_TOKEN not set — cannot call LLM")
     sys.exit(1)
 
 BASE_URL = "https://openai.bothub.ru/v1"
