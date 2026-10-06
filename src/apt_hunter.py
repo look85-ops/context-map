@@ -164,6 +164,71 @@ SYSTEM_PROMPT = """Ты — ассистент по поиску квартир.
 CSS-классы: top3 (≥7), ok (5-6), low (<5). Сортируй по убыванию оценки. Максимум 15 строк. Не выдумывай данные."""
 
 
+def score_item(r, dist):
+    """Score 0-10. Higher = better."""
+    s = 5.0
+    # Metro (x10)
+    if dist < 0.3: s += 2.5
+    elif dist < 0.5: s += 2.0
+    elif dist < 0.8: s += 1.5
+    elif dist < 1.2: s += 1.0
+    elif dist < 2.0: s += 0.5
+    elif dist < 3.0: s += 0.0
+    else: s -= 1.0
+
+    # Price/m2 (x7)
+    area = r.get("area", "0")
+    try: area_f = float(area)
+    except: area_f = 60
+    ppm = r["price"] / max(area_f, 1)
+    if ppm < 4500: s += 1.5
+    elif ppm < 5000: s += 1.0
+    elif ppm < 5500: s += 0.5
+    elif ppm < 6500: s += 0.0
+    else: s -= 0.5
+
+    # Floor (x4)
+    fl = r.get("floor", "?/?").split("/")
+    try:
+        f = int(fl[0]); tf = int(fl[1])
+        if tf > 1:
+            ratio = f / tf
+            if 0.25 <= ratio <= 0.75: s += 0.5
+            if f == tf: s -= 0.3
+    except: pass
+
+    # Material (x3)
+    mat = r.get("material", "").lower()
+    if "кирпич" in mat: s += 0.8
+    elif "монолит" in mat: s += 0.5
+    elif "каркас" in mat: s += 0.3
+    elif "панел" in mat: s -= 0.2
+
+    # Balcony (x2)
+    balc = r.get("balcony", "").lower()
+    if "два" in balc: s += 0.5
+    elif "лоджи" in balc: s += 0.2
+
+    # Area (x8)
+    if area_f >= 80: s += 1.0
+    elif area_f >= 70: s += 0.7
+    elif area_f >= 60: s += 0.3
+
+    # Year
+    year = r.get("year", "0")
+    try: y = int(year)
+    except: y = 1980
+    if y >= 2010: s += 0.5
+    elif y >= 2000: s += 0.3
+    elif y >= 1980: s += 0.0
+    else: s -= 0.2
+
+    # 4-room bonus
+    if r.get("rooms") == "4": s += 0.3
+
+    return round(min(10, max(0, s)), 1)
+
+
 def main():
     now = datetime.now()
     print(f"Apartment Hunter v{VERSION} — {now}")
@@ -192,19 +257,25 @@ def main():
             dist = 99
         r["metro_name"] = metro["name"]
         r["metro_dist"] = dist
+        r["score"] = score_item(r, dist)
         results.append(r)
     print(f"  {len(results)} passed, {skipped} skipped")
+
+    # Sort by score descending
+    results.sort(key=lambda x: x["score"], reverse=True)
 
     # Always generate HTML
     rows = []
     for i, item in enumerate(results, 1):
+        s = item["score"]
+        cls = "top3" if s >= 6.5 else ("ok" if s >= 5 else "low")
         rows.append(
-            f'<tr><td>{i}</td><td>{item["address"]}</td>'
+            f'<tr class="{cls}"><td>{i}</td><td>{item["address"]}</td>'
             f'<td class="price">{item["price"]:,.0f}</td>'
             f'<td>{item["rooms"]}</td><td>{item["area"]}</td><td>{item["area_living"]}</td>'
             f'<td>{item["floor"]}</td><td>{item["balcony"]}</td><td>{item["material"]}</td>'
             f'<td>{item["year"]}</td><td>м.{item["metro_name"]} {item["metro_dist"]}км</td>'
-            f'<td>{item["district"]}</td>'
+            f'<td><strong>{s}</strong></td>'
             f'<td><a href="{item["url"]}" target="_blank">Куфар</a></td></tr>'
         )
 
@@ -213,8 +284,8 @@ def main():
         f'<table><thead><tr>'
         f'<th>#</th><th>Адрес</th><th>Цена,BYN</th><th>к</th><th>м²</th><th>жил</th>'
         f'<th>Этаж</th><th>Балкон</th><th>Материал</th><th>Год</th>'
-        f'<th>Метро</th><th>Район</th><th>Ссылка</th>'
-        f'</tr></thead><tbody>{"".join(rows) if rows else "<tr><td colspan=13>Ничего не найдено — проверьте позже</td></tr>"}'
+        f'<th>Метро</th><th>Рейтинг</th><th>Ссылка</th>'
+        f'</tr></thead><tbody>{"".join(rows) if rows else "<tr><td colspan=12>Ничего не найдено</td></tr>"}'
         f'</tbody></table>'
     )
 
@@ -246,8 +317,7 @@ footer{{margin-top:1.5rem;padding-top:1rem;border-top:1px solid var(--border);fo
 .disclaimer{{margin-top:.8rem;padding:.6rem .8rem;background:#fef2f2;border-left:3px solid #ef4444;border-radius:4px;font-size:.78rem;color:#991b1b}}
 </style></head><body><div class="container">
 <header><h1>Minsk Apartments</h1>
-<div class="meta">{now.day} {["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"][now.month-1]} {now.year} · Kufar API + DeepSeek · 2×/день</div>
-<div class="criteria">3-4 комнаты · до 520 000 BYN · не 1-й эт · не 4-5/5 · балкон/лоджия · м.Восток — м.Октябрьская (метро)</div></header>
+<div class="meta">{now.day} {["января","февраля","марта","апреля","мая","июня","июля","августа","сентября","октября","ноября","декабря"][now.month-1]} {now.year} · {now:%H:%M} Минск</div></header>
 <main>{body}</main>
 <div class="disclaimer">Авто-сбор из Kufar API. Проверяйте на сайте перед звонком.</div>
 <footer><p>Apartment Hunter v{VERSION} · {now:%d.%m.%Y %H:%M} Минск</p></footer>
