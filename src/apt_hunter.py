@@ -27,7 +27,21 @@ TARGET_METRO = [
 KUFAF_METRO_IDS = "v.or:7,16,23,3,17,14,5"
 
 EXCLUDE_MICRO = ["минск-мир", "минск мир"]
-EXCLUDE_ADDR = ["белинского", "беломорская"]  # scam / already seen
+EXCLUDE_ADDR = ["белинского", "беломорская"]
+
+# Realt.by search URL (your metro UUIDs + filters)
+REALT_URL = (
+    "https://realt.by/sale/flats/?"
+    "addressV2=%5B%7B%22metroStationUuid%22%3A%22481ca613-7b00-11eb-8943-0cc47adabd66%22%7D"
+    "%2C%7B%22metroStationUuid%22%3A%22481caca1-7b00-11eb-8943-0cc47adabd66%22%7D"
+    "%2C%7B%22metroStationUuid%22%3A%22481ca9de-7b00-11eb-8943-0cc47adabd66%22%7D"
+    "%2C%7B%22metroStationUuid%22%3A%22481caba5-7b00-11eb-8943-0cc47adabd66%22%7D"
+    "%2C%7B%22metroStationUuid%22%3A%22481cada1-7b00-11eb-8943-0cc47adabd66%22%7D"
+    "%2C%7B%22metroStationUuid%22%3A%22481ca729-7b00-11eb-8943-0cc47adabd66%22%7D"
+    "%2C%7B%22metroStationUuid%22%3A%22481ca889-7b00-11eb-8943-0cc47adabd66%22%7D%5D"
+    "&balconyType=27&balconyType=2&isFirstStorey=false"
+    "&priceMeterType=all&priceTo=160000&priceType=840&rooms=3&rooms=4"
+)
 
 MAX_PRICE = 520000
 # Don't need LLM/DS_API_KEY for raw table mode
@@ -116,6 +130,68 @@ def haversine(lat1, lng1, lat2, lng2):
     dlat, dlng = radians(lat2 - lat1), radians(lng2 - lng1)
     a = sin(dlat/2)**2 + cos(radians(lat1))*cos(radians(lat2))*sin(dlng/2)**2
     return 2 * r * asin(sqrt(a))
+
+
+def search_realt():
+    """Search Realt.by via SSR __NEXT_DATA__."""
+    print("[Realt] fetching SSR page...")
+    try:
+        r = requests.get(REALT_URL, headers={"User-Agent": "Mozilla/5.0"}, timeout=30)
+        if r.status_code != 200:
+            print(f"  HTTP {r.status_code}")
+            return []
+        m = re.search(r'<script id="__NEXT_DATA__"[^>]*>(.*?)</script>', r.text, re.DOTALL)
+        if not m:
+            print("  no __NEXT_DATA__")
+            return []
+        nd = json.loads(m.group(1))
+        raw = nd["props"]["pageProps"]["objects"]
+        print(f"  {len(raw)} raw")
+
+        listings = []
+        for apt in raw:
+            price = float(apt.get("price", 0)) if apt.get("price") else 0
+            if price <= 0: continue
+            currency = apt.get("priceCurrency", 933)
+            if currency == 840: price = price * 3.1
+            if price > MAX_PRICE: continue
+
+            floor_val = apt.get("storey") or 0
+            total_f = apt.get("storeys") or 0
+            floor = int(floor_val) if floor_val else 0
+            tf = int(total_f) if total_f else 0
+            if tf == 5 and floor in (4, 5): continue
+
+            balc = apt.get("balconyType")
+            if not balc or balc == 0: continue
+
+            addr = apt.get("address", "?")
+            lat = lng = None
+            loc = apt.get("location")
+            if isinstance(loc, list) and len(loc) == 2:
+                lng, lat = loc[0], loc[1]
+
+            listings.append({
+                "url": f"https://realt.by/sale/flats/object/{apt.get('code','')}/",
+                "price": price,
+                "rooms": str(apt.get("rooms", "?")),
+                "area": str(apt.get("areaTotal", "?")),
+                "area_living": str(apt.get("areaLiving", "?")),
+                "floor": f"{floor}/{tf}" if tf else str(floor),
+                "balcony": "Есть",
+                "material": str(apt.get("wallMaterial") or "—"),
+                "year": str(apt.get("buildingYear") or "—"),
+                "address": addr if addr else "?",
+                "district": str(apt.get("stateDistrictName") or "?"),
+                "microdistrict": "",
+                "renovation": str(apt.get("repairState") or "?"),
+                "lat": lat, "lng": lng,
+            })
+        print(f"  {len(listings)} after filters")
+        return listings
+    except Exception as e:
+        print(f"  Realt error: {e}")
+        return []
 
 
 def call_llm(context: str, api_key: str) -> str:
@@ -260,6 +336,23 @@ def main():
         r["score"] = score_item(r, dist)
         results.append(r)
     print(f"  {len(results)} passed, {skipped} skipped")
+
+    # Phase 2: Realt.by via SSR
+    print("\n[Realt] search...")
+    realt = search_realt()
+    for r in realt:
+        lat, lng = r.get("lat"), r.get("lng")
+        if lat and lng:
+            metro = min(TARGET_METRO, key=lambda m: haversine(lat, lng, m["lat"], m["lng"]))
+            dist = round(haversine(lat, lng, metro["lat"], metro["lng"]), 1)
+        else:
+            metro = {"name": "?"}
+            dist = 99
+        r["metro_name"] = metro["name"]
+        r["metro_dist"] = dist
+        r["score"] = score_item(r, dist)
+        results.append(r)
+    print(f"  +{len(realt)} from Realt, {len(results)} total")
 
     # Sort by score descending
     results.sort(key=lambda x: x["score"], reverse=True)
