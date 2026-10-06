@@ -31,7 +31,7 @@ jobs:
         run: |
           git config --global user.name "apt-bot"
           git config --global user.email "bot@look85-ops.github.io"
-          git add index.html artifacts/
+          git add index.html
           if git diff --staged --quiet; then
             echo "No changes"
             exit 0
