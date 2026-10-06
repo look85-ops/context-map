@@ -65,7 +65,11 @@ def parse_one(ad):
             return None
         data = json.loads(m.group(1))
         for item in data.get("@graph", [data]):
-            if item.get("@type") != "Product":
+            item_type = item.get("@type", "")
+            if isinstance(item_type, list):
+                if "Product" not in item_type:
+                    continue
+            elif item_type != "Product":
                 continue
             props = {p["name"]: p["value"] for p in item.get("additionalProperty", [])}
             price = float(item.get("offers", {}).get("price", 0))
